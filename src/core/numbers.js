@@ -38,12 +38,3 @@ export function parseNumber(input) {
   if (!/^-?\d+(\.\d+)?$/.test(s)) return NaN;
   return Number(s);
 }
-
-export function formatEuro(cents) {
-  if (cents === null || cents === undefined) return '—';
-  return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100);
-}
-
-export function formatQty(q) {
-  return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 3 }).format(q);
-}

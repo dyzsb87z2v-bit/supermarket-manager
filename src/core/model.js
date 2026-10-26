@@ -6,6 +6,7 @@ export const UNITS = ['Stk', 'kg', 'l', 'Pkg'];
 
 export const DEFAULT_SETTINGS = Object.freeze({
   shopName: '',
+  orderLang: 'de', // language of the order text drafted for suppliers: 'de' | 'tr'
   salesWindowDays: 28, // how many days of sales history the average uses
   coverDays: 7, // how many days of sales an order should cover beyond the lead time
   expiryWarnDays: 7,

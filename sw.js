@@ -1,12 +1,15 @@
 // Offline cache. Bump VERSION whenever files change so installed copies pick up the update.
-const VERSION = 'smm-v3';
+const VERSION = 'smm-v4';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
-  './src/ui/app.js', './src/ui/i18n.js', './src/ui/dom.js',
+  './src/ui/app.js', './src/ui/app-lang.js', './src/ui/components.js', './src/ui/dom.js', './src/ui/icons.js', './src/ui/runtime.js',
+  './src/ui/i18n/index.js', './src/ui/i18n/pseudo.js', './src/ui/i18n/de.js', './src/ui/i18n/tr.js', './src/ui/i18n/fa.js',
+  './src/ui/screens/home.js', './src/ui/screens/products.js', './src/ui/screens/stock.js', './src/ui/screens/orders.js',
+  './src/ui/screens/reports.js', './src/ui/screens/settings.js',
   './src/core/alerts.js', './src/core/context.js', './src/core/csv.js', './src/core/dates.js', './src/core/demo.js',
-  './src/core/forecast.js', './src/core/inventory.js', './src/core/io.js', './src/core/model.js',
-  './src/core/numbers.js', './src/core/reports.js', './src/core/store.js',
+  './src/core/forecast.js', './src/core/format.js', './src/core/inventory.js', './src/core/io.js', './src/core/locales.js',
+  './src/core/model.js', './src/core/numbers.js', './src/core/reports.js', './src/core/store.js',
 ];
 
 self.addEventListener('install', (e) => {

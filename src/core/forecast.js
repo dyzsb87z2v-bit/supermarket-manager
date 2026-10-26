@@ -72,18 +72,25 @@ export function buildOrderSuggestions(ctx) {
   return list.sort((a, b) => (a.supplier ? 0 : 1) - (b.supplier ? 0 : 1) || (a.supplier?.name ?? '').localeCompare(b.supplier?.name ?? ''));
 }
 
-/** Plain-text German draft the owner can copy/paste. This app never sends it anywhere. */
-export function formatOrderText(group, { shopName = '', date }) {
+const ORDER_TEXT = {
+  de: { title: 'Bestellung (Entwurf)', to: 'An', pickSupplier: '(Lieferant auswählen)', please: 'Bitte liefern:', thanks: 'Vielen Dank!', units: { Stk: 'Stk', kg: 'kg', l: 'l', Pkg: 'Pkg' } },
+  tr: { title: 'Sipariş (taslak)', to: 'Kime', pickSupplier: '(tedarikçi seçin)', please: 'Lütfen gönderin:', thanks: 'Teşekkürler!', units: { Stk: 'adet', kg: 'kg', l: 'lt', Pkg: 'paket' } },
+};
+
+/** Plain-text draft the owner can copy/paste to a supplier ('de' or 'tr'). This app never sends it anywhere. */
+export function formatOrderText(group, { shopName = '', date, lang = 'de' }) {
+  const L = ORDER_TEXT[lang] ?? ORDER_TEXT.de;
   const lines = [
-    `Bestellung (Entwurf)${shopName ? ' – ' + shopName : ''} – ${date}`,
-    group.supplier ? `An: ${group.supplier.name}` : 'An: (Lieferant auswählen)',
+    `${L.title}${shopName ? ' – ' + shopName : ''} – ${date}`,
+    `${L.to}: ${group.supplier ? group.supplier.name : L.pickSupplier}`,
     '',
-    'Bitte liefern:',
+    L.please,
   ];
   for (const l of group.lines) {
     const name = l.product.nameDe || l.product.nameTr;
-    lines.push(`- ${l.suggestedQty} ${l.product.unit} ${name}${l.product.barcode ? ` (EAN ${l.product.barcode})` : ''}`);
+    const tr = lang === 'tr' && l.product.nameTr ? l.product.nameTr : name;
+    lines.push(`- ${l.suggestedQty} ${L.units[l.product.unit] ?? l.product.unit} ${tr}${l.product.barcode ? ` (EAN ${l.product.barcode})` : ''}`);
   }
-  lines.push('', 'Vielen Dank!');
+  lines.push('', L.thanks);
   return lines.join('\n');
 }

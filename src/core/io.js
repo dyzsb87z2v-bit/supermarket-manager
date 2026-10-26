@@ -3,7 +3,7 @@ import { parseDateInput, todayStr } from './dates.js';
 import { buildContext } from './context.js';
 import { addMovement, upsertProduct, upsertSupplier } from './inventory.js';
 import { DB_VERSION, normalizeDb, replaceDbContents } from './model.js';
-import { formatQty, parseMoneyToCents, parseNumber, round3 } from './numbers.js';
+import { parseMoneyToCents, parseNumber, round3 } from './numbers.js';
 
 const PRODUCT_ALIASES = {
   barcode: ['ean', 'gtin', 'barkod', 'strichcode'],
@@ -234,4 +234,3 @@ export function parseBackup(text, { expectDemo }) {
   return { ok: true, db };
 }
 
-export { formatQty };

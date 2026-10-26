@@ -138,3 +138,13 @@ test('reports only include the selected branch', () => {
   move(db, p, 'sale', 3, TODAY);
   assert.equal(dailyReport(db, TODAY, { today: TODAY, branchId: 'other' }).units, 0);
 });
+
+test('order text can be drafted in Turkish for Turkish suppliers', () => {
+  const { db, p, s } = mkDb();
+  seedSales(db, p, 10, 28, 300);
+  const g = buildOrderSuggestions(buildContext(db, { today: TODAY })).find((x) => x.supplier?.id === s.id);
+  const tr = formatOrderText(g, { shopName: 'Test Markt', date: TODAY, lang: 'tr' });
+  assert.match(tr, /Sipariş \(taslak\)/);
+  assert.match(tr, /- 78 adet Yoğurt \(EAN 4001234567890\)/);
+  assert.match(formatOrderText(g, { date: TODAY, lang: 'xx' }), /Bestellung \(Entwurf\)/, 'unknown language falls back to German');
+});
