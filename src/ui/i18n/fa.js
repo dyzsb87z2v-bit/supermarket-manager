@@ -185,6 +185,8 @@ export default {
   'settings.importSales': 'فروش',
   'settings.importReceipts': 'ورود کالا',
   'settings.columnsTitle': 'ستون‌های لازم',
+  'settings.columnsProducts': 'کالاها:',
+  'settings.columnsMovements': 'فروش / ورود کالا:',
   'settings.columnsHelp': 'نام ستون‌ها به آلمانی و ترکی هم پذیرفته می‌شود (مثل Artikel، EK، VK، Menge، Datum، Barkod). ستون stock موجودی شمارش‌شده است: فقط اختلاف ثبت می‌شود.',
   'settings.exportTitle': 'خروج اطلاعات',
   'settings.exportProducts': 'کالاها (CSV)',

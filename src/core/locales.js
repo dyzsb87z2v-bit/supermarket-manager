@@ -6,11 +6,11 @@
 export const SOURCE_LOCALE = 'de';
 
 export const LOCALES = [
-  { code: 'de', endonym: 'Deutsch', dir: 'ltr', scripts: ['Latin'], formatLocale: 'de-DE', fallback: ['de'], status: 'beta', reviewedBy: null, reviewedAt: null },
-  { code: 'tr', endonym: 'Türkçe', dir: 'ltr', scripts: ['Latin'], formatLocale: 'tr-TR', fallback: ['de'], status: 'beta', reviewedBy: null, reviewedAt: null },
+  { code: 'de', endonym: 'Deutsch', dir: 'ltr', scripts: ['Latin'], formatLocale: 'de-DE', pluralLocale: 'de', fallback: ['de'], status: 'beta', reviewedBy: null, reviewedAt: null },
+  { code: 'tr', endonym: 'Türkçe', dir: 'ltr', scripts: ['Latin'], formatLocale: 'tr-TR', pluralLocale: 'tr', fallback: ['de'], status: 'beta', reviewedBy: null, reviewedAt: null },
   // Persian keeps Latin digits and Gregorian dates on purpose (matches prices and barcodes).
-  { code: 'fa', endonym: 'فارسی', dir: 'rtl', scripts: ['Arabic'], formatLocale: 'de-DE', fallback: ['de'], status: 'beta', reviewedBy: null, reviewedAt: null },
-  { code: 'en-XA', endonym: 'Pseudo', dir: 'ltr', scripts: ['Latin'], formatLocale: 'de-DE', fallback: ['de'], status: 'pseudo', reviewedBy: null, reviewedAt: null },
+  { code: 'fa', endonym: 'فارسی', dir: 'rtl', scripts: ['Arabic'], formatLocale: 'de-DE', pluralLocale: 'fa', fallback: ['de'], status: 'beta', reviewedBy: null, reviewedAt: null },
+  { code: 'en-XA', endonym: 'Pseudo', dir: 'ltr', scripts: ['Latin'], formatLocale: 'de-DE', pluralLocale: 'de', fallback: ['de'], status: 'pseudo', reviewedBy: null, reviewedAt: null },
 ];
 
 export const PRODUCTION_LOCALES = LOCALES.filter((l) => l.status !== 'pseudo');

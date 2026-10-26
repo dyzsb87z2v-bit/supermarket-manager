@@ -186,6 +186,8 @@ export default {
   'settings.importSales': 'Verkäufe',
   'settings.importReceipts': 'Wareneingang',
   'settings.columnsTitle': 'Benötigte Spalten',
+  'settings.columnsProducts': 'Artikel:',
+  'settings.columnsMovements': 'Verkauf / Wareneingang:',
   'settings.columnsHelp': 'Spaltennamen auf Deutsch oder Türkisch werden ebenfalls erkannt (z. B. Artikel, EK, VK, Menge, Datum, Barkod). Die Spalte „stock“ ist der gezählte Bestand: Es wird nur die Differenz gebucht.',
   'settings.exportTitle': 'Export',
   'settings.exportProducts': 'Artikel (CSV)',

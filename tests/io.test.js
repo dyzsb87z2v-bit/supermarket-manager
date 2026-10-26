@@ -152,3 +152,20 @@ test('invalid stock value rejects the whole product import', () => {
   assert.equal(db.products.length, 0);
   assert.equal(db.movements.length, 0);
 });
+
+test('restore/load rejects data a later render would choke on (bad dates, types, quantities)', () => {
+  const { db, p } = mkDb();
+  move(db, p, 'receive', 5, '2026-03-01');
+  const withMove = (patch) => {
+    const copy = JSON.parse(exportBackup(db));
+    Object.assign(copy.movements[0], patch);
+    return parseBackup(JSON.stringify(copy), { expectDemo: false });
+  };
+  assert.equal(withMove({}).ok, true);
+  assert.equal(withMove({ date: 'abc' }).errors[0], 'invalid_data');
+  assert.equal(withMove({ date: '2026-02-31' }).errors[0], 'invalid_data');
+  assert.equal(withMove({ expiry: 'soon' }).errors[0], 'invalid_data');
+  assert.equal(withMove({ type: 'gift' }).errors[0], 'invalid_data');
+  assert.equal(withMove({ qty: 'five' }).errors[0], 'invalid_data');
+  assert.equal(withMove({ productId: 7 }).errors[0], 'invalid_data');
+});

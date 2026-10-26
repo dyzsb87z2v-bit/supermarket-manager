@@ -171,7 +171,7 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     await tid('sub-daily').click();
     await shot('10-daily-tr');
     await page.reload();
-    assert.equal(await page.evaluate(() => document.documentElement.lang), 'tr', 'language persists');
+    await page.waitForFunction(() => document.documentElement.lang === 'tr', null, { timeout: 5000 }).catch(() => assert.fail('language did not persist across reload'));
     await tid('header-lang').selectOption('fa');
     await page.waitForFunction(() => document.documentElement.dir === 'rtl');
     await tab('home');
@@ -196,12 +196,13 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     await tid('open-settings').click();
     await tid('ws-demo').click();
     await page.goto(`${url}?lang=en-XA`);
+    await tid('tab-home').waitFor(); // first render finished (not the boot placeholder)
     assert.equal(await page.evaluate(() => document.documentElement.lang), 'en', 'positive control: pseudo locale active');
     const sweep = async (label) => {
       const bad = await page.evaluate(() => {
         const out = [];
         const hasLetters = (s) => /\p{L}/u.test(s);
-        const skip = (el) => el.closest('[data-user]');
+        const skip = (el) => el.closest('[data-user],[data-fmt]');
         const scope = [...document.querySelectorAll('#app, .sheet-bg, .toast')];
         for (const root of scope) {
           const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);

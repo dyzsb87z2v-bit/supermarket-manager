@@ -40,7 +40,7 @@ export function checkPacks(packs, { locales = PRODUCTION_LOCALES, source = SOURC
     if (loc.status === 'live' && !(loc.reviewedBy && loc.reviewedAt)) v.push(`${loc.code}: status live without review record`);
     for (const k of Object.keys(src)) if (!(k in pack)) v.push(`${loc.code}: missing key ${k}`);
     for (const k of Object.keys(pack)) if (!(k in src)) v.push(`${loc.code}: extra key ${k}`);
-    const cats = new Intl.PluralRules(loc.formatLocale).resolvedOptions().pluralCategories;
+    const cats = new Intl.PluralRules(loc.pluralLocale).resolvedOptions().pluralCategories;
     const bases = new Set(Object.keys(src).filter(isPlural).map(pluralBase));
     for (const b of bases) for (const c of cats) if (!(`${b}.${c}` in pack)) v.push(`${loc.code}: plural ${b} lacks category "${c}"`);
     for (const [k, val] of Object.entries(pack)) {

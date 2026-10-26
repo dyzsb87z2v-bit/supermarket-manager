@@ -185,6 +185,8 @@ export default {
   'settings.importSales': 'Satışlar',
   'settings.importReceipts': 'Mal kabul',
   'settings.columnsTitle': 'Gerekli sütunlar',
+  'settings.columnsProducts': 'Ürünler:',
+  'settings.columnsMovements': 'Satış / Mal kabul:',
   'settings.columnsHelp': 'Sütun adları Almanca veya Türkçe de olabilir (ör. Artikel, EK, VK, Menge, Datum, Barkod). “stock” sütunu sayılan stoktur: yalnızca fark kaydedilir.',
   'settings.exportTitle': 'Dışa aktar',
   'settings.exportProducts': 'Ürünler (CSV)',

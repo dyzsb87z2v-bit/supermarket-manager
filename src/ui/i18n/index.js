@@ -30,7 +30,7 @@ export async function setLang(code) {
   const loc = localeByCode(code) ?? localeByCode(SOURCE_LOCALE);
   for (const c of [loc.code, ...loc.fallback]) await loadPack(c);
   current = loc.code;
-  setFormatLocale(loc.formatLocale);
+  setFormatLocale(loc.formatLocale, loc.pluralLocale);
   const root = document.documentElement;
   root.lang = loc.code === 'en-XA' ? 'en' : loc.code;
   root.dir = loc.dir;

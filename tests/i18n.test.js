@@ -172,7 +172,20 @@ test('percent values use the locale decimal separator', async () => {
   const { formatPct } = await import('../src/core/format.js');
   setFormatLocale('de-DE');
   assert.equal(formatPct(32.26), '32,3');
-  assert.equal(formatPct(100, { sign: true }), '+100');
-  assert.equal(formatPct(-12.5, { sign: true }), '-12,5');
+  const bare = (x) => x.replace(/[\u2066\u2069]/g, '');
+  assert.equal(bare(formatPct(100, { sign: true })), '+100');
+  assert.equal(bare(formatPct(-12.5, { sign: true })), '-12,5');
+  assert.ok(formatPct(-12.5, { sign: true }).startsWith('\u2066'), 'signed values are bidi-isolated so the sign stays left of the digits in RTL text');
+  assert.equal(formatDate('abc'), 'abc', 'bad stored dates must never throw');
+  assert.equal(formatDate('2026-02-31'), '2026-02-31');
   setFormatLocale('de-DE');
+});
+
+test('plural rules follow the UI language, not the number-format locale', async () => {
+  const { setFormatLocale, pluralCategory } = await import('../src/core/format.js');
+  setFormatLocale('de-DE', 'fa');
+  assert.equal(pluralCategory(0), 'one', 'Persian treats 0 as "one" (CLDR)');
+  setFormatLocale('de-DE', 'de');
+  assert.equal(pluralCategory(0), 'other');
+  for (const l of PRODUCTION_LOCALES) assert.ok(l.pluralLocale, `${l.code} declares a plural locale`);
 });

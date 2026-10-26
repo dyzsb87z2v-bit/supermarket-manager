@@ -99,7 +99,7 @@ function singleView() {
       const p = byId.get(m.productId);
       return h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'name ltr', 'data-user': '', text: p ? pname(p) : '?' }),
         h('div', { class: 'sub num', text: `${formatDate(m.date)} · ${moveLabel(m.type)}${m.expiry ? ` · ${t('stock.expiryShort')} ${formatDate(m.expiry)}` : ''}` })),
-        h('span', { class: 'num', text: `${m.type === 'sale' || m.type === 'waste' ? '−' : m.qty > 0 ? '+' : ''}${formatQty(m.qty)}` }),
+        h('span', { class: 'num', dir: 'ltr', text: `${m.type === 'sale' || m.type === 'waste' ? '−' : m.qty > 0 ? '+' : ''}${formatQty(m.qty)}` }),
         h('button', { class: 'icon-btn danger', 'aria-label': t('stock.deleteMovement'), onclick: () => {
           if (!confirm(t('stock.deleteConfirm'))) return;
           const r = deleteMovement(db, m.id);

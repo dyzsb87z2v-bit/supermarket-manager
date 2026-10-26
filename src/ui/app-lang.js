@@ -13,9 +13,11 @@ export function initialLanguage() {
   return pickLocale(navigator.languages ?? [navigator.language]);
 }
 
-export async function changeLanguage(code) {
+export async function changeLanguage(code, focusTestId) {
   await setLang(code);
   if (localeByCode(code).status !== 'pseudo') lsSet('smm:lang', code);
   document.title = t('app.title');
   render();
+  // render() rebuilds the page; put keyboard focus back on the control that was used
+  if (focusTestId) document.querySelector(`[data-testid="${focusTestId}"]`)?.focus();
 }

@@ -39,7 +39,7 @@ function renderApp() {
     state.ws === 'demo' ? h('span', { class: 'badge', text: t('app.demoBadge') }) : null,
     state.db.branches.length > 1 ? h('select', { class: 'hsel', 'data-user': '', 'aria-label': t('app.branch'), onchange: (e) => { state.branchId = e.target.value; render(); } },
       state.db.branches.map((b) => h('option', { value: b.id, text: branchLabel(b), selected: b.id === state.branchId }))) : null,
-    h('select', { class: 'hsel lang', 'aria-label': t('settings.language'), 'data-testid': 'header-lang', 'data-user': '', onchange: (e) => changeLanguage(e.target.value) },
+    h('select', { class: 'hsel lang', 'aria-label': t('settings.language'), 'data-testid': 'header-lang', 'data-user': '', onchange: (e) => changeLanguage(e.target.value, 'header-lang') },
       supportedLanguages().map((l) => h('option', { value: l.code, text: l.code.toUpperCase(), selected: l.code === getLang() }))),
     h('button', { class: 'icon-btn on-dark', 'data-testid': 'open-settings', 'aria-label': inSettings ? t('common.close') : t('settings.title'),
       onclick: () => { state.tab = inSettings ? 'home' : 'settings'; render(); } }, icon(inSettings ? 'x' : 'sliders')));
@@ -54,7 +54,14 @@ bus.render = renderApp;
 bus.banners = renderBanners;
 
 async function boot() {
-  await setLang(initialLanguage());
+  try {
+    await setLang(initialLanguage());
+  } catch {
+    try { await setLang('de'); } catch {
+      root.textContent = 'Laden fehlgeschlagen — bitte Seite neu laden. / Yüklenemedi — lütfen sayfayı yenileyin.'; // no language pack available at all
+      return;
+    }
+  }
   document.title = t('app.title');
   let backend;
   try {

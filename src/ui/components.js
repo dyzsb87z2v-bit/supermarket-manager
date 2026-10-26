@@ -37,15 +37,34 @@ export function nameBlock(p) {
     p.nameDe && p.nameTr ? h('div', { class: 'sub ltr', 'data-user': '', text: p.nameTr }) : null);
 }
 
+const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+/** Modal dialog: focus moves into it, Tab is kept inside, Escape closes, focus returns to the opener. */
 export function openSheet(title, body) {
+  const opener = document.activeElement;
   const bg = h('div', { class: 'sheet-bg' });
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
-  const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
+  const panel = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title, tabindex: '-1' },
+    h('h2', {}, h('span', { text: title }), h('button', { class: 'icon-btn', onclick: () => close(), 'aria-label': t('common.close') }, icon('x'))), body);
+  const onKey = (e) => {
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key !== 'Tab') return;
+    const items = [...panel.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  function close() {
+    bg.remove();
+    document.removeEventListener('keydown', onKey);
+    if (opener?.isConnected) opener.focus?.();
+  }
   document.addEventListener('keydown', onKey);
   bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
-  bg.append(h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title },
-    h('h2', {}, h('span', { text: title }), h('button', { class: 'icon-btn', onclick: close, 'aria-label': t('common.close') }, icon('x'))), body));
+  bg.append(panel);
   document.body.append(bg);
+  panel.focus(); // the dialog itself, so no on-screen keyboard pops up unasked
   return { close };
 }
 

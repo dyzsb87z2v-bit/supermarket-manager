@@ -1,7 +1,7 @@
 import { h, download } from '../dom.js';
 import { t } from '../i18n/index.js';
 import { state, ctx, render, persist, toast, loadWorkspace } from '../runtime.js';
-import { field, filePicker, importReport, errorText, branchLabel } from '../components.js';
+import { field, filePicker, importReport, errorText, branchLabel, formatDate } from '../components.js';
 import { todayStr } from '../../core/dates.js';
 import { addBranch } from '../../core/inventory.js';
 import { generateDemoDb } from '../../core/demo.js';
@@ -43,7 +43,7 @@ export function screenSettings() {
     h('option', { value: 'de', text: t('settings.orderLangDe'), selected: db.settings.orderLang === 'de' }),
     h('option', { value: 'tr', text: t('settings.orderLangTr'), selected: db.settings.orderLang === 'tr' }));
   const branchName = h('input', { placeholder: t('settings.branchName'), dir: 'auto' });
-  const lang = h('select', { 'aria-label': t('settings.language'), 'data-testid': 'lang-select', 'data-user': '', onchange: (e) => changeLanguage(e.target.value) },
+  const lang = h('select', { 'aria-label': t('settings.language'), 'data-testid': 'lang-select', 'data-user': '', onchange: (e) => changeLanguage(e.target.value, 'lang-select') },
     supportedLanguages().map((l) => h('option', { value: l.code, text: l.endonym, selected: l.code === getLang() })));
 
   return h('main', {},
@@ -66,8 +66,8 @@ export function screenSettings() {
         filePicker(t('settings.importSales'), (x) => run((txt) => importMovementsCsv(db, txt, { defaultType: 'sale', branchId: state.branchId }), x), 'file-sales'),
         filePicker(t('settings.importReceipts'), (x) => run((txt) => importMovementsCsv(db, txt, { defaultType: 'receive', branchId: state.branchId }), x), 'file-receipts')),
       h('details', {}, h('summary', { text: t('settings.columnsTitle') }),
-        h('p', { class: 'ltr muted', 'data-user': '', text: 'Artikel: barcode; name_de; name_tr; category; supplier; buy_price; sell_price; unit; min_stock; pack_size; active; stock; expiry' }),
-        h('p', { class: 'ltr muted', 'data-user': '', text: 'Verkauf / Wareneingang: date; barcode; qty; (unit_price; unit_cost; expiry; type; branch; note)' }),
+        h('p', { class: 'muted' }, `${t('settings.columnsProducts')} `, h('span', { class: 'ltr', 'data-user': '', text: 'barcode; name_de; name_tr; category; supplier; buy_price; sell_price; unit; min_stock; pack_size; active; stock; expiry' })),
+        h('p', { class: 'muted' }, `${t('settings.columnsMovements')} `, h('span', { class: 'ltr', 'data-user': '', text: 'date; barcode; qty; (unit_price; unit_cost; expiry; type; branch; note)' })),
         h('p', { class: 'muted', text: t('settings.columnsHelp') })),
       result),
 
@@ -77,7 +77,7 @@ export function screenSettings() {
         h('button', { onclick: () => download(`movements-${prefix}${todayStr()}.csv`, exportMovementsCsv(db)), text: t('settings.exportMovements') }))),
 
     h('section', { class: 'card form' }, h('h2', { text: t('settings.backupTitle') }),
-      h('p', { class: 'muted', text: db.meta.lastBackupAt ? t('settings.lastBackup', { date: db.meta.lastBackupAt }) : t('settings.noBackup') }),
+      h('p', { class: 'muted', text: db.meta.lastBackupAt ? t('settings.lastBackup', { date: formatDate(db.meta.lastBackupAt) }) : t('settings.noBackup') }),
       h('div', { class: 'btns' }, h('button', { class: 'primary', 'data-testid': 'backup', onclick: doBackup, text: t('settings.backupDownload') }),
         filePicker(t('settings.restore'), async (text) => {
           const res = parseBackup(text, { expectDemo: state.ws === 'demo' });

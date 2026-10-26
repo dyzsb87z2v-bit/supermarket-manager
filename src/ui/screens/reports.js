@@ -30,7 +30,7 @@ export function screenReports() {
   if (kind === 'weekly') {
     const max = Math.max(1, ...r.days.map((x) => x.revenueCents));
     out.append(h('section', { class: 'card' }, h('h2', { text: t('reports.dailySales') }),
-      h('div', { class: 'bars' }, r.days.map((x) => h('div', { class: 'bar' }, h('span', { class: 'num', 'data-user': '', text: formatDayShort(x.date) }),
+      h('div', { class: 'bars' }, r.days.map((x) => h('div', { class: 'bar' }, h('span', { class: 'num', 'data-fmt': '', text: formatDayShort(x.date) }),
         h('i', { style: `width:${Math.round((x.revenueCents / max) * 100)}%` }), h('span', { class: 'num', text: formatEuro(x.revenueCents) })))),
       h('p', { class: 'muted', text: r.revenueChangePct === null ? t('reports.noPrevWeek')
         : t('reports.vsPrev', { pct: formatPct(r.revenueChangePct, { sign: true }), prev: formatEuro(r.previousRevenueCents) }) })));

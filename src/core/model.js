@@ -1,4 +1,4 @@
-import { todayStr } from './dates.js';
+import { isValidDateStr, todayStr } from './dates.js';
 
 export const DB_VERSION = 1;
 export const MOVEMENT_TYPES = ['receive', 'sale', 'waste', 'adjust'];
@@ -39,6 +39,11 @@ export function normalizeDb(raw) {
     if (!Array.isArray(raw[k])) throw new Error('invalid_data');
   }
   if (raw.version !== DB_VERSION) throw new Error('invalid_data');
+  const isObj = (x) => x && typeof x === 'object' && typeof x.id === 'string';
+  if (![...raw.suppliers, ...raw.products, ...raw.branches].every(isObj)) throw new Error('invalid_data');
+  const validMovement = (m) => isObj(m) && isValidDateStr(m.date) && MOVEMENT_TYPES.includes(m.type) && Number.isFinite(m.qty)
+    && typeof m.productId === 'string' && typeof m.branchId === 'string' && (m.expiry === null || m.expiry === undefined || isValidDateStr(m.expiry));
+  if (!raw.movements.every(validMovement)) throw new Error('invalid_data');
   const db = {
     version: DB_VERSION,
     meta: { createdAt: todayStr(), lastBackupAt: null, isDemo: false, ...(raw.meta || {}) },
