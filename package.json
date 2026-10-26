@@ -1,0 +1,12 @@
+{
+  "name": "supermarket-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Free, offline-first inventory manager for a small supermarket (no dependencies).",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": { "node": ">=20" }
+}
