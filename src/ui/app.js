@@ -3,7 +3,7 @@ import { fa, errorText } from './i18n.js';
 import { todayStr, addDays, parseDateInput } from '../core/dates.js';
 import { buildContext } from '../core/context.js';
 import { MOVEMENT_TYPES, UNITS, categoriesOf, createEmptyDb } from '../core/model.js';
-import { addBranch, addMovement, batchesOf, deleteMovement, upsertProduct, upsertSupplier } from '../core/inventory.js';
+import { addBranch, addMovement, batchesOf, deleteMovement, recordDailySales, upsertProduct, upsertSupplier } from '../core/inventory.js';
 import { buildOrderSuggestions, formatOrderText } from '../core/forecast.js';
 import { expiryAlerts, lowStockAlerts } from '../core/alerts.js';
 import { dailyReport, weeklyReport } from '../core/reports.js';
@@ -26,6 +26,8 @@ const state = {
   reportDate: todayStr(),
   productQuery: '',
   draft: { productId: null, type: 'sale', date: todayStr() },
+  stockSub: 'move',
+  daily: { date: todayStr(), qtys: new Map(), query: '', onlyInStock: true },
   saveError: null,
   storageKind: 'memory',
 };
@@ -55,6 +57,7 @@ async function loadWorkspace(ws) {
   state.db = db;
   state.branchId = db.branches[0].id;
   state.draft = { productId: null, type: 'sale', date: todayStr() };
+  state.daily = { date: todayStr(), qtys: new Map(), query: '', onlyInStock: true };
   lsSet('smm:ws', ws);
 }
 
@@ -284,7 +287,100 @@ function openProductSheet(product) {
 
 /* stock */
 
+function stockSubSeg() {
+  const btn = (key, label) => h('button', { 'aria-pressed': String(state.stockSub === key), onclick: () => { state.stockSub = key; render(); }, text: label });
+  return h('div', { class: 'seg' }, btn('move', 'ثبت تکی'), btn('daily', 'ثبت سریع فروش روزانه'));
+}
+
+function screenDailySales() {
+  const db = state.db;
+  const c = ctx();
+  const d = state.daily;
+  const errBox = h('div');
+  const list = h('div', { class: 'card' });
+  const summary = h('p', { class: 'num', role: 'status' });
+  const submitBtn = h('button', { class: 'primary', text: 'ثبت همه' });
+
+  const soldOn = (productId) => {
+    let n = 0;
+    for (const m of c.movementsOf(productId)) if (m.type === 'sale' && m.date === d.date) n += m.qty;
+    return n;
+  };
+  const qtyOf = (id) => parseNumber(d.qtys.get(id) ?? '');
+  const drawSummary = () => {
+    let lines = 0; let units = 0; let revenue = 0;
+    for (const p of db.products) {
+      const q = qtyOf(p.id);
+      if (q && q > 0) { lines += 1; units += q; revenue += Math.round((p.sellPriceCents ?? 0) * q); }
+    }
+    summary.textContent = lines ? `${lines} کالا · ${formatQty(units)} عدد/واحد · تخمین فروش ${formatEuro(revenue)}` : 'هنوز مقداری وارد نشده.';
+    submitBtn.disabled = lines === 0;
+  };
+  const draw = () => {
+    const needle = d.query.trim().toLowerCase();
+    const items = db.products.filter((p) => p.active
+      && (!d.onlyInStock || c.stockOf(p.id) > 0 || d.qtys.get(p.id))
+      && (!needle || [p.nameDe, p.nameTr, p.barcode].join(' ').toLowerCase().includes(needle))).slice(0, 300);
+    const nodes = items.length === 0
+      ? [h('p', { class: 'muted', text: db.products.length ? 'کالایی برای نمایش نیست (فیلتر «فقط دارای موجودی» یا جستجو را بررسی کنید).' : T.noData })]
+      : items.map((p) => {
+        const already = soldOn(p.id);
+        const input = h('input', { class: 'qty', inputMode: p.unit === 'kg' || p.unit === 'l' ? 'decimal' : 'numeric', dir: 'ltr', placeholder: '0',
+          value: d.qtys.get(p.id) ?? '', 'aria-label': `مقدار فروش ${pname(p)}`, 'data-pid': p.id,
+          oninput: (e) => { d.qtys.set(p.id, e.target.value); errBox.replaceChildren(); drawSummary(); },
+          onkeydown: (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            const all = [...list.querySelectorAll('input.qty')];
+            all[all.indexOf(e.target) + 1]?.focus();
+          } });
+        return h('div', { class: 'drow', 'data-row': p.id }, nameBlock(p),
+          h('div', { class: 'sub num' }, `موجودی ${formatQty(c.stockOf(p.id))} ${p.unit}`,
+            already ? h('div', { class: 'chip soon', text: `قبلاً ${formatQty(already)} ثبت شده` }) : null),
+          input);
+      });
+    list.replaceChildren(...nodes);
+  };
+
+  submitBtn.addEventListener('click', () => {
+    const entries = [];
+    const pre = [];
+    for (const p of db.products) {
+      const raw = d.qtys.get(p.id);
+      if (raw === undefined || String(raw).trim() === '') continue;
+      const q = parseNumber(raw);
+      if (q === null || Number.isNaN(q) || q < 0) { pre.push(`${pname(p)}: ${errorText('qty_invalid')}`); continue; }
+      entries.push({ productId: p.id, qty: q });
+    }
+    if (pre.length) { errBox.replaceChildren(h('ul', { class: 'errors', role: 'alert' }, pre.map((t) => h('li', { text: t })))); return; }
+    const byId = new Map(db.products.map((x) => [x.id, x]));
+    const res = recordDailySales(db, { date: d.date, branchId: state.branchId, entries });
+    if (!res.ok) {
+      errBox.replaceChildren(h('p', { class: 'banner bad', text: 'هیچ فروشی ثبت نشد. اول خطاها را اصلاح کنید:' }),
+        h('ul', { class: 'errors', role: 'alert' }, res.errors.map((e) => h('li', {
+          text: `${e.productId ? pname(byId.get(e.productId)) + ': ' : ''}${errorText(e.code)}${e.available !== undefined ? ` (موجودی: ${formatQty(e.available)})` : ''}` }))));
+      return;
+    }
+    persist();
+    d.qtys = new Map();
+    toast(`${res.count} فروش برای ${d.date} ثبت شد`);
+    render();
+  });
+
+  const dateIn = h('input', { type: 'date', value: d.date, dir: 'ltr', 'aria-label': 'تاریخ فروش',
+    onchange: (e) => { d.date = parseDateInput(e.target.value) ?? todayStr(); render(); } });
+  const search = h('input', { type: 'search', placeholder: T.search, value: d.query, 'aria-label': T.search, oninput: (e) => { d.query = e.target.value; draw(); } });
+  const only = h('input', { type: 'checkbox', checked: d.onlyInStock, onchange: (e) => { d.onlyInStock = e.target.checked; draw(); } });
+  draw(); drawSummary();
+  return h('main', {}, stockSubSeg(),
+    h('div', { class: 'card form' }, h('h2', { text: 'فروش روزانه' }),
+      h('p', { class: 'muted', text: 'مقدار فروش هر کالا را بنویسید (از روی گزارش پایان روز صندوق). با Enter به کالای بعدی بروید. ثبت «همه‌یا‌هیچ» است.' }),
+      field('تاریخ', dateIn), search, h('label', { class: 'row' }, only, h('span', { text: 'فقط کالاهای دارای موجودی' }))),
+    list, h('div', { class: 'card form' }, summary, errBox, submitBtn));
+}
+
 function screenStock() {
+  if (state.stockSub === 'daily') return screenDailySales();
   const db = state.db;
   const c = ctx();
   const d = state.draft;
@@ -368,7 +464,7 @@ function screenStock() {
           persist(); render();
         }, text: '✕' }));
     }));
-  return h('main', {}, form, history);
+  return h('main', {}, stockSubSeg(), form, history);
 }
 
 /* orders + suppliers */

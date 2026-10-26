@@ -120,3 +120,35 @@ test('suppliers: validation and duplicates', () => {
   assert.ok(upsertSupplier(db, { name: 'B', leadTimeDays: -1 }).errors.includes('lead_time_invalid'));
   assert.ok(upsertSupplier(db, { name: '' }).errors.includes('name_required'));
 });
+
+test('quick daily sales: books many lines at once with price snapshots', async () => {
+  const { recordDailySales } = await import('../src/core/inventory.js');
+  const { db, p } = mkDb();
+  const p2 = upsertProduct(db, { nameDe: 'Tee', unit: 'kg', buyPriceCents: 300, sellPriceCents: 500, packSize: 0.5 }).product;
+  move(db, p, 'receive', 10, '2026-03-01');
+  move(db, p2, 'receive', 4, '2026-03-01');
+  const r = recordDailySales(db, { date: '2026-03-05', branchId: 'main', entries: [
+    { productId: p.id, qty: 3 }, { productId: p2.id, qty: '1,5'.replace(',', '.') }, { productId: p.id, qty: 0 }, { productId: p2.id, qty: '' },
+  ] });
+  assert.deepEqual([r.ok, r.count], [true, 2]);
+  assert.equal(getStock(db, p.id), 7);
+  assert.equal(getStock(db, p2.id), 2.5);
+  const sale = db.movements.find((m) => m.type === 'sale' && m.productId === p.id);
+  assert.deepEqual([sale.date, sale.unitPriceCents], ['2026-03-05', 199]);
+});
+
+test('quick daily sales is all-or-nothing and reports which product failed', async () => {
+  const { recordDailySales } = await import('../src/core/inventory.js');
+  const { db, p } = mkDb();
+  const p2 = upsertProduct(db, { nameDe: 'Tee', unit: 'Stk' }).product;
+  move(db, p, 'receive', 10, '2026-03-01');
+  move(db, p2, 'receive', 2, '2026-03-01');
+  const before = db.movements.length;
+  const r = recordDailySales(db, { date: '2026-03-05', branchId: 'main', entries: [{ productId: p.id, qty: 3 }, { productId: p2.id, qty: 5 }] });
+  assert.equal(r.ok, false);
+  assert.deepEqual(r.errors.map((e) => [e.productId, e.code, e.available]), [[p2.id, 'insufficient_stock', 2]]);
+  assert.equal(db.movements.length, before);
+  assert.equal(recordDailySales(db, { date: '2026-03-05', branchId: 'main', entries: [{ productId: p.id, qty: 0 }] }).errors[0].code, 'nothing_to_record');
+  assert.equal(recordDailySales(db, { date: 'bad', branchId: 'main', entries: [{ productId: p.id, qty: 1 }] }).errors[0].code, 'date_invalid');
+  assert.equal(recordDailySales(db, { date: '2026-03-05', branchId: 'main', entries: [{ productId: p.id, qty: 1.5 }] }).errors[0].code, 'qty_not_integer');
+});

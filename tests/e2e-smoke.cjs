@@ -88,6 +88,24 @@ const root = path.join(__dirname, '..');
     await tab('کالاها');
     await page.getByText('ZZ Testkäse 400g').waitFor();
 
+    step = 'quick daily sales';
+    await tab('موجودی');
+    await page.getByRole('button', { name: 'ثبت سریع فروش روزانه' }).click();
+    const row = page.locator('[data-row]', { hasText: 'ZZ Testkäse' });
+    await row.getByText('موجودی 15 Stk').waitFor();
+    await row.locator('input.qty').fill('99');
+    await page.getByRole('button', { name: 'ثبت همه' }).click();
+    await page.getByText('هیچ فروشی ثبت نشد').waitFor();
+    await page.getByText(/موجودی کافی نیست/).waitFor();
+    await shot('04b-daily-error');
+    await row.locator('input.qty').fill('3');
+    await page.getByText(/1 کالا · 3 عدد/).waitFor();
+    await shot('04c-daily-filled');
+    await page.getByRole('button', { name: 'ثبت همه' }).click();
+    await page.getByText('1 فروش برای').waitFor();
+    await tab('کالاها');
+    await page.locator('button.row', { hasText: 'ZZ Testkäse' }).getByText(/^12 Stk$/).waitFor();
+
     step = 'CSV import: bad file imports nothing';
     await page.locator('header.top button[aria-label="تنظیمات"]').click();
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'smm-'));

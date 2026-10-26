@@ -1,5 +1,5 @@
 import { isValidDateStr, todayStr } from './dates.js';
-import { MOVEMENT_TYPES, UNITS, newId } from './model.js';
+import { MOVEMENT_TYPES, UNITS, newId, replaceDbContents } from './model.js';
 import { buildContext, movementDelta } from './context.js';
 import { round3 } from './numbers.js';
 
@@ -168,4 +168,23 @@ export function batchesOf(ctx, productId) {
     out = round3(out - take);
   }
   return batches.filter((b) => b.qty > 0);
+}
+
+/**
+ * Books many sales for one day at once (quick daily entry). All-or-nothing: if any line is
+ * invalid (e.g. more than in stock) nothing is recorded. Lines with qty 0/empty are skipped.
+ * Returns { ok, count } or { ok: false, errors: [{ productId, code }] }.
+ */
+export function recordDailySales(db, { date, branchId, entries }) {
+  const lines = entries.filter((e) => Number(e.qty) !== 0 && e.qty !== '' && e.qty !== null && e.qty !== undefined);
+  if (lines.length === 0) return { ok: false, errors: [{ productId: null, code: 'nothing_to_record' }] };
+  const work = structuredClone(db);
+  const errors = [];
+  for (const e of lines) {
+    const res = addMovement(work, { productId: e.productId, branchId, date, type: 'sale', qty: Number(e.qty) });
+    if (!res.ok) res.errors.forEach((code) => errors.push({ productId: e.productId, code, available: res.available }));
+  }
+  if (errors.length) return { ok: false, errors };
+  replaceDbContents(db, work);
+  return { ok: true, count: lines.length };
 }

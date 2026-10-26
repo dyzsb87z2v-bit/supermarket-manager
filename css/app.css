@@ -75,3 +75,8 @@ nav.tabs button[aria-current=page] { color: var(--brand); font-weight: 700; }
 .sugg-note { font-size: .85rem; color: var(--muted); }
 pre.order { white-space: pre-wrap; direction: ltr; text-align: left; background: var(--bg); padding: .6rem; border-radius: 8px; font-size: .85rem; border: 1px solid var(--line); }
 .ltr { direction: ltr; unicode-bidi: plaintext; }
+
+input.qty { width: 5.5rem; text-align: center; }
+.drow { display: grid; grid-template-columns: 1fr auto; gap: .2rem .6rem; align-items: center; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.drow:last-child { border-bottom: 0; }
+.drow > :first-child { grid-column: 1 / -1; }

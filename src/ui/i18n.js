@@ -18,6 +18,7 @@ export const fa = {
     sell_price_invalid: 'قیمت فروش نامعتبر است.',
     price_invalid: 'قیمت نامعتبر است.',
     unit_invalid: 'واحد نامعتبر است.',
+    nothing_to_record: 'هیچ مقداری وارد نشده است.',
     stock_invalid: 'موجودی (stock) نامعتبر است؛ باید عدد صفر یا بزرگ‌تر باشد.',
     min_stock_invalid: 'حداقل موجودی نامعتبر است.',
     pack_size_invalid: 'اندازهٔ بسته باید بزرگ‌تر از صفر باشد.',
