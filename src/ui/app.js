@@ -97,7 +97,7 @@ function importReport(res, container) {
   container.replaceChildren();
   if (res.ok) {
     const parts = [];
-    if (res.created !== undefined) parts.push(`${res.created} کالای جدید، ${res.updated} کالای به‌روزشده`);
+    if (res.created !== undefined) parts.push(`${res.created} کالای جدید، ${res.updated} کالای به‌روزشده${res.stockSet ? `، موجودی ${res.stockSet} کالا ثبت شد` : ''}`);
     if (res.imported !== undefined) parts.push(`${res.imported} رکورد ثبت شد`);
     container.append(h('p', { class: 'banner', text: `انجام شد: ${parts.join(' / ')}` }));
   } else {
@@ -530,11 +530,11 @@ function screenSettings() {
     h('div', { class: 'card form' }, h('h2', { text: 'ورود از فایل CSV' }),
       h('p', { class: 'muted', text: 'فایل Excel را قبل از ورود با «Save as → CSV (UTF-8)» ذخیره کنید. جداکننده , یا ; هر دو پذیرفته می‌شود. اگر فایل حتی یک ردیف خطا داشته باشد، هیچ چیز وارد نمی‌شود.' }),
       h('div', { class: 'btns' },
-        filePicker('کالاها', (t) => run((x) => importProductsCsv(db, x), t)),
+        filePicker('کالاها', (t) => run((x) => importProductsCsv(db, x, { branchId: state.branchId }), t)),
         filePicker('فروش', (t) => run((x) => importMovementsCsv(db, x, { defaultType: 'sale', branchId: state.branchId }), t)),
         filePicker('ورود کالا', (t) => run((x) => importMovementsCsv(db, x, { defaultType: 'receive', branchId: state.branchId }), t))),
       h('details', {}, h('summary', { text: 'ستون‌های لازم' }),
-        h('p', { class: 'ltr muted', text: 'Kalem: barcode; name_de; name_tr; category; supplier; buy_price; sell_price; unit; min_stock; pack_size; active' }),
+        h('p', { class: 'ltr muted', text: 'Kalem: barcode; name_de; name_tr; category; supplier; buy_price; sell_price; unit; min_stock; pack_size; active; stock (موجودی شمارش‌شده)' }),
         h('p', { class: 'ltr muted', text: 'Verkauf/Eingang: date; barcode; qty; (unit_price; unit_cost; expiry; type; branch; note)' }),
         h('p', { class: 'muted', text: 'نام ستون‌ها به آلمانی و ترکی هم پذیرفته می‌شود (مثل Artikel، EK، VK، Menge، Datum، Barkod).' })),
       result),

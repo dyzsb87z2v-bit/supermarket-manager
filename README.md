@@ -47,7 +47,7 @@ python3 -m http.server 8080        # سپس http://localhost:8080 را باز ک
 
 **تست‌ها:**
 ```bash
-npm test                           # ۳۱ تست منطق (Node ≥ 20، بدون نصب پکیج)
+npm test                           # ۳۴ تست منطق (Node ≥ 20، بدون نصب پکیج)
 node tests/e2e-smoke.cjs           # اختیاری: تست مرورگری (نیاز به Playwright)
 ```
 
@@ -60,6 +60,6 @@ tests/      تست‌های واحد (node --test) و تست مرورگر
 ```
 
 ## ستون‌های CSV
-- **کالاها:** `barcode; name_de; name_tr; category; supplier; buy_price; sell_price; unit; min_stock; pack_size; active` (نام ستون به آلمانی/ترکی هم پذیرفته می‌شود: Artikel، EK، VK، Mindestbestand، Barkod …). ورود مجدد بر اساس بارکد «به‌روزرسانی» می‌کند.
+- **کالاها:** `barcode; name_de; name_tr; category; supplier; buy_price; sell_price; unit; min_stock; pack_size; active; stock; expiry` (نام ستون به آلمانی/ترکی هم پذیرفته می‌شود: Artikel، EK، VK، Mindestbestand، Barkod …). ورود مجدد بر اساس بارکد «به‌روزرسانی» می‌کند. ستون `stock` «موجودی شمارش‌شده» است: فقط اختلاف با موجودی فعلی ثبت می‌شود، پس ورود دوبارهٔ همان فایل چیزی را تغییر نمی‌دهد. ستون‌های `sku`، `sold14`، `lead` و `targetDays` (از نسخهٔ قدیمی تک‌فایلی) نادیده گرفته می‌شوند؛ `pack` همان اندازهٔ بسته است.
 - **فروش / ورود کالا:** `date; barcode; qty` و اختیاری: `unit_price; unit_cost; expiry; type; branch; note`. تاریخ `2026-03-31` یا `31.03.2026`.
 - ورود CSV «همه یا هیچ» است: اگر یک ردیف خطا داشته باشد هیچ‌چیز وارد نمی‌شود و شمارهٔ ردیف خطا نشان داده می‌شود (تا با ورود دوباره، رکوردها تکراری نشوند).

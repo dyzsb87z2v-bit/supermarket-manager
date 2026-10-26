@@ -114,3 +114,41 @@ test('store keeps real and demo data apart', async () => {
   await assert.rejects(() => store.load('other'), /unknown_workspace/);
   assert.equal((await store.load('demo')).products.length, demo.products.length);
 });
+
+const LEGACY_CSV = `sku;nameDe;nameTr;barcode;category;stock;sold14;minStock;lead;targetDays;pack;buyPrice;sellPrice;supplier;expiry
+DEMO-1001;Reis 1 kg;Pirinç 1 kg;4000000000011;Trockenwaren;8;28;4;3;14;6;1.40;2.29;Lieferant X;
+DEMO-1002;Öl;Yağ;4000000000028;Öl;20;14;5;4;14;6;1.60;2.49;Lieferant X;15.04.2027
+`;
+
+test('product CSV with "stock" books counted stock, keeps pack size, ignores sku/sold14', () => {
+  const db = createEmptyDb();
+  const r = importProductsCsv(db, LEGACY_CSV, { today: TODAY });
+  assert.deepEqual([r.ok, r.created, r.stockSet], [true, 2, 2]);
+  assert.ok(r.unknownHeaders.includes('sold14') && r.unknownHeaders.includes('sku'));
+  assert.deepEqual(db.products.map((p) => p.packSize), [6, 6]);
+  const ctx = buildContext(db, { today: TODAY });
+  assert.deepEqual(db.products.map((p) => ctx.stockOf(p.id)), [8, 20]);
+  assert.equal(db.movements.find((m) => m.type === 'receive').expiry, '2027-04-15');
+  assert.equal(db.movements.every((m) => m.date === TODAY), true);
+});
+
+test('re-importing the same stock file changes nothing; a new count books only the difference', () => {
+  const db = createEmptyDb();
+  importProductsCsv(db, LEGACY_CSV, { today: TODAY });
+  const n = db.movements.length;
+  const again = importProductsCsv(db, LEGACY_CSV, { today: TODAY });
+  assert.equal(again.stockSet, 0);
+  assert.equal(db.movements.length, n);
+  const recount = importProductsCsv(db, LEGACY_CSV.replace(';8;28;', ';5;28;'), { today: TODAY });
+  assert.equal(recount.stockSet, 1);
+  const ctx = buildContext(db, { today: TODAY });
+  assert.equal(ctx.stockOf(db.products[0].id), 5);
+});
+
+test('invalid stock value rejects the whole product import', () => {
+  const db = createEmptyDb();
+  const r = importProductsCsv(db, 'name;barcode;stock\nA;4000000000011;5\nB;4000000000028;-2', { today: TODAY });
+  assert.deepEqual(r.errors, [{ line: 3, code: 'stock_invalid' }]);
+  assert.equal(db.products.length, 0);
+  assert.equal(db.movements.length, 0);
+});

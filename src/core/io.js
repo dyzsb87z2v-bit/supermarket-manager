@@ -1,8 +1,9 @@
 import { parseTable, toCsv } from './csv.js';
-import { parseDateInput } from './dates.js';
+import { parseDateInput, todayStr } from './dates.js';
+import { buildContext } from './context.js';
 import { addMovement, upsertProduct, upsertSupplier } from './inventory.js';
 import { DB_VERSION, normalizeDb, replaceDbContents } from './model.js';
-import { formatQty, parseMoneyToCents, parseNumber } from './numbers.js';
+import { formatQty, parseMoneyToCents, parseNumber, round3 } from './numbers.js';
 
 const PRODUCT_ALIASES = {
   barcode: ['ean', 'gtin', 'barkod', 'strichcode'],
@@ -14,8 +15,10 @@ const PRODUCT_ALIASES = {
   sellPrice: ['vk', 'verkaufspreis', 'vkpreis', 'satis', 'satisfiyati', 'price', 'preis', 'sell_price'],
   unit: ['einheit', 'birim'],
   minStock: ['mindestbestand', 'minbestand', 'minimum', 'minstok', 'min_stock'],
-  packSize: ['packungsgroesse', 'packungsgrosse', 'gebinde', 'gebindegroesse', 'koli', 'pack_size'],
+  packSize: ['pack', 'packungsgroesse', 'packungsgrosse', 'gebinde', 'gebindegroesse', 'koli', 'pack_size'],
   active: ['aktiv', 'aktif'],
+  stock: ['bestand', 'stok', 'currentstock'],
+  expiry: ['mhd', 'ablaufdatum', 'skt', 'bestbefore'],
 };
 
 const MOVEMENT_ALIASES = {
@@ -54,16 +57,19 @@ function clone(db) {
  * Imports products (upsert by barcode). All-or-nothing: if any row is invalid, nothing changes.
  * Unknown supplier names are created with the default lead time.
  */
-export function importProductsCsv(db, text) {
+export function importProductsCsv(db, text, { branchId, today = todayStr() } = {}) {
   const { records, headers, unknownHeaders } = parseTable(text, PRODUCT_ALIASES);
   if (!headers.includes('nameDe') && !headers.includes('nameTr')) {
     return { ok: false, errors: [{ line: 1, code: 'missing_name_column' }], unknownHeaders };
   }
   if (records.length === 0) return { ok: false, errors: [{ line: 1, code: 'no_rows' }], unknownHeaders };
   const work = clone(db);
+  const branch = branchId ?? work.branches[0].id;
+  const startStock = buildContext(work, { branchId: branch }).stock;
   const errors = [];
   let created = 0;
   let updated = 0;
+  let stockSet = 0;
   const seen = new Set();
   for (const r of records) {
     const rowErrors = [];
@@ -77,6 +83,10 @@ export function importProductsCsv(db, text) {
     if (Number.isNaN(pack) || (pack !== null && pack <= 0)) rowErrors.push('pack_size_invalid');
     const unit = r.unit ? UNIT_WORDS[plain(r.unit)] : 'Stk';
     if (!unit) rowErrors.push('unit_invalid');
+    const counted = parseNumber(r.stock);
+    if (Number.isNaN(counted) || (counted ?? 0) < 0) rowErrors.push('stock_invalid');
+    const expiry = r.expiry ? parseDateInput(r.expiry) : null;
+    if (r.expiry && !expiry) rowErrors.push('expiry_invalid');
     if (r.barcode && seen.has(r.barcode)) rowErrors.push('barcode_duplicate');
     if (r.barcode) seen.add(r.barcode);
     if (rowErrors.length) { rowErrors.forEach((code) => errors.push({ line: r._line, code })); continue; }
@@ -101,12 +111,25 @@ export function importProductsCsv(db, text) {
       packSize: pack ?? existing?.packSize ?? 1,
       active: r.active ? !INACTIVE.has(plain(r.active)) : existing?.active ?? true,
     }, existing?.id ?? null);
-    if (!res.ok) res.errors.forEach((code) => errors.push({ line: r._line, code }));
-    else if (res.created) created += 1; else updated += 1;
+    if (!res.ok) { res.errors.forEach((code) => errors.push({ line: r._line, code })); continue; }
+    if (res.created) created += 1; else updated += 1;
+    // "stock" is a COUNTED quantity: only the difference to the current stock is booked, so
+    // importing the same file twice changes nothing.
+    if (counted !== null) {
+      const delta = round3(counted - (startStock.get(res.product.id) ?? 0));
+      if (delta !== 0) {
+        const mv = addMovement(work, {
+          productId: res.product.id, branchId: branch, date: today, qty: delta, note: 'Import: Bestand',
+          type: delta > 0 && expiry ? 'receive' : 'adjust', expiry: delta > 0 ? expiry : null,
+        });
+        if (!mv.ok) mv.errors.forEach((code) => errors.push({ line: r._line, code }));
+        else stockSet += 1;
+      }
+    }
   }
   if (errors.length) return { ok: false, errors, unknownHeaders };
   replaceDbContents(db, work);
-  return { ok: true, created, updated, unknownHeaders };
+  return { ok: true, created, updated, stockSet, unknownHeaders };
 }
 
 /**

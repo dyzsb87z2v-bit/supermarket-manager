@@ -1,5 +1,5 @@
 // Offline cache. Bump VERSION whenever files change so installed copies pick up the update.
-const VERSION = 'smm-v1';
+const VERSION = 'smm-v2';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/app.css',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
