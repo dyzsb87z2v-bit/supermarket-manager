@@ -132,6 +132,24 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     await page.getByText('Neu: 1 · Aktualisiert: 0').waitFor();
     await page.getByText('Bestand gebucht: 1').waitFor();
 
+    step = 'DSFinV-K register export: books sales once, re-import changes nothing';
+    const HDR = 'Z_KASSE_ID;Z_ERSTELLUNG;Z_NR;BON_ID;POS_ZEILE;GV_TYP;P_STORNO;ART_NR;GTIN;ARTIKELTEXT;MENGE;FAKTOR;EINHEIT;STK_BR';
+    const kasse = path.join(tmp, 'lines.csv');
+    fs.writeFileSync(kasse, `${HDR}\r\nK1;2026-03-30T22:05:00+02:00;7;B1;1;Umsatz;0;;4000000000011;Brot;2;1;;0.89\r\nK1;2026-03-30T22:05:00+02:00;7;B2;1;Pfand;0;;;Pfand;1;1;;0.25\r\n`);
+    await tid('file-dsfinvk').setInputFiles(kasse);
+    await page.getByText('Kassenabschlüsse neu: 1 · bereits eingelesen: 0 · Buchungen: 1').waitFor();
+    await page.getByText(/Übersprungen: Zeilen ohne Umsatz \(z\. B\. Pfand\) 1/).waitFor();
+    await shot('06b-dsfinvk-import-de');
+    await tid('file-dsfinvk').setInputFiles(kasse);
+    await page.getByText('Kassenabschlüsse neu: 0 · bereits eingelesen: 1 · Buchungen: 0').waitFor();
+    const garbage = path.join(tmp, 'broken.zip');
+    fs.writeFileSync(garbage, 'not a zip at all');
+    await tid('file-dsfinvk').setInputFiles(garbage);
+    await tid('dsfinvk-result').getByText(D['err.zip_unsupported']).waitFor();
+    await tab('products');
+    await page.locator('button.row', { hasText: 'Brot' }).getByText('5 Stk').waitFor();
+    await tid('open-settings').click();
+
     step = 'workspace separation';
     await tid('ws-demo').click();
     await page.locator('.banner.demo').waitFor();

@@ -266,4 +266,15 @@ export default {
   'err.no_rows': 'فایل ردیف داده ندارد.',
   'err.invalid_data': 'فایل پشتیبان معتبر نیست.',
   'err.workspace_mismatch': 'این فایل متعلق به فضای دیگری (نمونه/واقعی) است و وارد نمی‌شود.',
+
+  'settings.dsfinvkTitle': 'ورود اطلاعات از صندوق (DSFinV-K)',
+  'settings.dsfinvkHelp': 'صندوق‌های دارای TSE می‌توانند خروجی استاندارد «DSFinV-K» بدهند (از فروشندهٔ صندوق یا مشاور مالیاتی بپرسید). فایل ZIP یا فایل lines.csv را انتخاب کنید. هر Kassenabschluss فقط یک‌بار ثبت می‌شود؛ خواندن دوبارهٔ همان فایل چیزی را دوباره حساب نمی‌کند. فقط کالاهایی ثبت می‌شوند که بارکدشان (EAN/GTIN) مطابقت دارد. هنوز با خروجی یک صندوق واقعی آزمایش نشده است.',
+  'settings.dsfinvkPick': 'انتخاب فایل صندوق',
+  'settings.dsfinvkSkipUnknown': 'کالاهای ناشناخته را رد کن (به‌جای لغو همه)',
+  'import.dsfinvk': 'بستن روز جدید: {closings} · قبلاً خوانده‌شده: {skipped} · رکورد: {movements}',
+  'import.dsfinvkSkipped': 'ردشده: ردیف‌های غیرفروش (مثل پانت) {nonSale} · ردیف‌های لغوشده {storno} · کالای ناشناخته {unknown}',
+  'import.unknownItems': 'کالاهای ناشناخته: {items}',
+  'err.dsfinvk_columns_missing': 'این شبیه فایل «lines.csv» استاندارد DSFinV-K نیست (ستون‌های MENGE، Z_ERSTELLUNG و GTIN یا ART_NR لازم است).',
+  'err.unit_mismatch': 'واحد صندوق با واحد کالا نمی‌خواند (تبدیل انجام نمی‌شود).',
+  'err.zip_unsupported': 'فایل ZIP خوانده نشد یا lines.csv ندارد (فقط ZIP استاندارد بدون رمز).',
 };

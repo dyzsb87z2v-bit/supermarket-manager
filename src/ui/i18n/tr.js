@@ -266,4 +266,15 @@ export default {
   'err.no_rows': 'Dosyada veri satırı yok.',
   'err.invalid_data': 'Yedek dosyası geçersiz.',
   'err.workspace_mismatch': 'Bu dosya diğer alana (Demo/Gerçek) ait olduğu için içe aktarılmaz.',
+
+  'settings.dsfinvkTitle': 'Kasa dışa aktarımını içe aktar (DSFinV-K)',
+  'settings.dsfinvkHelp': 'TSE’li kasalar standart “DSFinV-K” dışa aktarımını üretebilir (kasa sağlayıcınıza veya mali müşavirinize sorun). ZIP dosyasını veya lines.csv dosyasını seçin. Her kasa kapanışı yalnızca bir kez kaydedilir; aynı dosyayı tekrar yüklemek mükerrer kayıt oluşturmaz. Yalnızca barkodu (EAN/GTIN) eşleşen ürünler kaydedilir. Henüz gerçek bir kasanın dışa aktarımıyla denenmedi.',
+  'settings.dsfinvkPick': 'Kasa dosyasını seç',
+  'settings.dsfinvkSkipUnknown': 'Bilinmeyen ürünleri atla (hepsini iptal etme)',
+  'import.dsfinvk': 'Yeni kasa kapanışı: {closings} · daha önce alınan: {skipped} · kayıt: {movements}',
+  'import.dsfinvkSkipped': 'Atlananlar: satış olmayan satırlar (ör. depozito) {nonSale} · iptal edilen satırlar {storno} · bilinmeyen ürün {unknown}',
+  'import.unknownItems': 'Bilinmeyen ürünler: {items}',
+  'err.dsfinvk_columns_missing': 'Bu, DSFinV-K “lines.csv” dosyasına benzemiyor (beklenen sütunlar: MENGE, Z_ERSTELLUNG ve GTIN veya ART_NR).',
+  'err.unit_mismatch': 'Kasadaki birim ürünün birimiyle uyuşmuyor (dönüştürme yapılmaz).',
+  'err.zip_unsupported': 'ZIP dosyası okunamadı veya içinde lines.csv yok (yalnızca şifresiz standart ZIP).',
 };

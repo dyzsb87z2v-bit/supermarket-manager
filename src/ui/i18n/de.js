@@ -267,4 +267,15 @@ export default {
   'err.no_rows': 'Die Datei enthält keine Datenzeilen.',
   'err.invalid_data': 'Die Sicherungsdatei ist ungültig.',
   'err.workspace_mismatch': 'Diese Datei gehört zum anderen Bereich (Demo/Echt) und wird nicht importiert.',
+
+  'settings.dsfinvkTitle': 'Kassen-Export einlesen (DSFinV-K)',
+  'settings.dsfinvkHelp': 'Kassen mit TSE können den Standard-Export „DSFinV-K“ erzeugen (fragen Sie Ihren Kassenanbieter oder Steuerberater). Wählen Sie die ZIP-Datei oder die Datei lines.csv. Jeder Kassenabschluss wird nur einmal gebucht; dieselbe Datei erneut einzulesen bucht nichts doppelt. Gebucht werden nur Artikel mit passendem Barcode (EAN/GTIN). Noch nicht mit dem Export einer echten Kasse getestet.',
+  'settings.dsfinvkPick': 'Kassen-Export wählen',
+  'settings.dsfinvkSkipUnknown': 'Unbekannte Artikel überspringen (statt alles abzubrechen)',
+  'import.dsfinvk': 'Kassenabschlüsse neu: {closings} · bereits eingelesen: {skipped} · Buchungen: {movements}',
+  'import.dsfinvkSkipped': 'Übersprungen: Zeilen ohne Umsatz (z. B. Pfand) {nonSale} · stornierte Zeilen {storno} · unbekannte Artikel {unknown}',
+  'import.unknownItems': 'Unbekannte Artikel: {items}',
+  'err.dsfinvk_columns_missing': 'Das sieht nicht nach der DSFinV-K-Datei „lines.csv“ aus (erwartet: Spalten MENGE, Z_ERSTELLUNG und GTIN oder ART_NR).',
+  'err.unit_mismatch': 'Die Einheit der Kasse passt nicht zur Einheit des Artikels (es wird nicht umgerechnet).',
+  'err.zip_unsupported': 'Die ZIP-Datei konnte nicht gelesen werden oder enthält keine lines.csv (nur Standard-ZIP ohne Passwort).',
 };

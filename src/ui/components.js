@@ -78,14 +78,29 @@ export function filePicker(label, onText, testId) {
   return h('span', {}, input, h('button', { onclick: () => input.click(), text: label }));
 }
 
+export function filePickerRaw(label, onFile, testId, accept) {
+  const input = h('input', { type: 'file', accept, hidden: true, 'data-testid': testId });
+  input.addEventListener('change', async () => {
+    const f = input.files?.[0];
+    if (f) await onFile(f);
+    input.value = '';
+  });
+  return h('span', {}, input, h('button', { onclick: () => input.click(), text: label }));
+}
+
 export function importReport(res, container) {
   container.replaceChildren();
   if (res.ok) {
     const parts = [];
+    if (res.closings) parts.push(t('import.dsfinvk', { closings: res.closings.imported, skipped: res.closings.skipped, movements: res.movements }));
     if (res.created !== undefined) parts.push(t('import.products', { created: res.created, updated: res.updated }));
     if (res.stockSet) parts.push(t('import.stockSet', { n: res.stockSet }));
     if (res.imported !== undefined) parts.push(t('import.movements', { n: res.imported }));
     container.append(h('p', { class: 'banner ok', role: 'status', text: `${t('import.done')} ${parts.join(' · ')}` }));
+    if (res.skipped && (res.skipped.nonSale || res.skipped.storno || res.skipped.unknown)) {
+      container.append(h('p', { class: 'muted', text: t('import.dsfinvkSkipped', res.skipped) }));
+    }
+    if (res.unknownItems?.length) container.append(h('p', { class: 'muted', 'data-user': '', text: t('import.unknownItems', { items: res.unknownItems.join(', ') }) }));
   } else {
     container.append(
       h('p', { class: 'banner bad', role: 'alert', text: t('import.failed') }),

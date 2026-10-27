@@ -1,10 +1,12 @@
 import { h, download } from '../dom.js';
 import { t } from '../i18n/index.js';
 import { state, ctx, render, persist, toast, loadWorkspace } from '../runtime.js';
-import { field, filePicker, importReport, errorText, branchLabel, formatDate } from '../components.js';
+import { field, filePicker, filePickerRaw, importReport, errorText, branchLabel, formatDate } from '../components.js';
 import { todayStr } from '../../core/dates.js';
 import { addBranch } from '../../core/inventory.js';
 import { generateDemoDb } from '../../core/demo.js';
+import { importDsfinvkLines } from '../../core/dsfinvk.js';
+import { decodeText, readLinesCsvFromZip } from '../../core/zip.js';
 import { exportBackup, exportMovementsCsv, exportProductsCsv, importMovementsCsv, importProductsCsv, parseBackup } from '../../core/io.js';
 import { parseNumber } from '../../core/numbers.js';
 import { supportedLanguages } from '../i18n/index.js';
@@ -22,12 +24,25 @@ export function screenSettings() {
   const db = state.db;
   const c = ctx();
   const result = h('div', { 'data-testid': 'import-result' });
-  const run = async (fn, text) => {
+  const resultKasse = h('div', { 'data-testid': 'dsfinvk-result' });
+  const run = async (fn, text, target = result) => {
     const res = fn(text);
-    importReport(res, result);
+    importReport(res, target);
     if (res.ok) { await persist(); toast(t('common.done')); }
   };
   const prefix = state.ws === 'demo' ? 'DEMO-' : '';
+  const skipUnknown = h('input', { type: 'checkbox', 'data-testid': 'dsfinvk-skip-unknown' });
+  const importKasse = async (file) => {
+    let text;
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      text = /\.zip$/i.test(file.name) || /zip/.test(file.type) ? await readLinesCsvFromZip(bytes) : decodeText(bytes);
+    } catch {
+      importReport({ ok: false, errors: [{ line: '-', code: 'zip_unsupported' }] }, resultKasse);
+      return;
+    }
+    await run((txt) => importDsfinvkLines(db, txt, { branchId: state.branchId, skipUnknown: skipUnknown.checked }), text, resultKasse);
+  };
 
   const numSetting = (label, key, min, max, hint) => {
     const input = h('input', { value: String(db.settings[key]), inputMode: 'numeric', dir: 'ltr' });
@@ -70,6 +85,12 @@ export function screenSettings() {
         h('p', { class: 'muted' }, `${t('settings.columnsMovements')} `, h('span', { class: 'ltr', 'data-user': '', text: 'date; barcode; qty; (unit_price; unit_cost; expiry; type; branch; note)' })),
         h('p', { class: 'muted', text: t('settings.columnsHelp') })),
       result),
+
+    h('section', { class: 'card form' }, h('h2', { text: t('settings.dsfinvkTitle') }),
+      h('p', { class: 'muted', text: t('settings.dsfinvkHelp') }),
+      h('label', { class: 'check' }, skipUnknown, h('span', { text: t('settings.dsfinvkSkipUnknown') })),
+      h('div', { class: 'btns' }, filePickerRaw(t('settings.dsfinvkPick'), importKasse, 'file-dsfinvk', '.zip,.csv,.txt,application/zip,text/csv')),
+      resultKasse),
 
     h('section', { class: 'card form' }, h('h2', { text: t('settings.exportTitle') }),
       h('div', { class: 'btns' },

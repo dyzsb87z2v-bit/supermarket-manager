@@ -6,7 +6,8 @@ const placeholders = (s) => [...String(s).matchAll(PLACEHOLDER)].map((m) => m[1]
 
 // Technical terms and column names that must stay as written in every language.
 export const DO_NOT_TRANSLATE = ['EAN', 'CSV', 'Excel', 'DELETE', 'IndexedDB', 'POS', 'Enter', 'UTF-8', 'Stk', 'Pkg', 'kg', 'Artikel', 'EK', 'VK', 'Menge', 'Datum',
-  'Barkod', 'name', 'qty', 'stock', 'barcode', 'Deutsch', 'Türkçe', 'Save', 'as', 'MHD', 'SKT'];
+  'Barkod', 'name', 'qty', 'stock', 'barcode', 'Deutsch', 'Türkçe', 'Save', 'as', 'MHD', 'SKT',
+  'DSFinV-K', 'lines.csv', 'MENGE', 'Z_ERSTELLUNG', 'GTIN', 'ART_NR', 'TSE', 'ZIP', 'Kassenabschluss'];
 
 // Values that are legitimately identical to the German source (true cognates / symbols) per locale.
 export const ALLOW_IDENTICAL = {
@@ -18,7 +19,8 @@ const SCRIPT_RE = { Latin: /\p{Script=Latin}/gu, Arabic: /\p{Script=Arabic}/gu }
 
 function letterShare(text, scripts) {
   let clean = text.replace(PLACEHOLDER, ' ').replace(/[\d\p{P}\p{S}\s]/gu, '');
-  for (const term of DO_NOT_TRANSLATE) clean = clean.split(term).join('');
+  // terms are compared in the same stripped form as the text (punctuation/underscores removed)
+  for (const term of DO_NOT_TRANSLATE) clean = clean.split(term.replace(/[\d\p{P}\p{S}\s]/gu, '')).join('');
   const letters = clean.match(/\p{L}/gu) ?? [];
   if (letters.length === 0) return 1;
   const inScript = letters.filter((ch) => scripts.some((s) => ch.match(SCRIPT_RE[s]))).length;

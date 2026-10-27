@@ -23,7 +23,7 @@ export function newId(prefix) {
 export function createEmptyDb({ isDemo = false } = {}) {
   return {
     version: DB_VERSION,
-    meta: { createdAt: todayStr(), lastBackupAt: null, isDemo },
+    meta: { createdAt: todayStr(), lastBackupAt: null, isDemo, importedClosings: [] },
     settings: { ...DEFAULT_SETTINGS },
     branches: [{ id: 'main', name: 'Hauptfiliale' }],
     suppliers: [],
@@ -46,13 +46,14 @@ export function normalizeDb(raw) {
   if (!raw.movements.every(validMovement)) throw new Error('invalid_data');
   const db = {
     version: DB_VERSION,
-    meta: { createdAt: todayStr(), lastBackupAt: null, isDemo: false, ...(raw.meta || {}) },
+    meta: { createdAt: todayStr(), lastBackupAt: null, isDemo: false, importedClosings: [], ...(raw.meta || {}) },
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings || {}) },
     branches: raw.branches,
     suppliers: raw.suppliers,
     products: raw.products,
     movements: raw.movements,
   };
+  if (!Array.isArray(db.meta.importedClosings) || !db.meta.importedClosings.every((k) => typeof k === 'string')) throw new Error('invalid_data');
   if (db.branches.length === 0) db.branches.push({ id: 'main', name: 'Hauptfiliale' });
   return db;
 }
