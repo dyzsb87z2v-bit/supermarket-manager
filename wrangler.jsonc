@@ -1,0 +1,8 @@
+{
+  // Static site: no Worker script, only the files in this folder (see .assetsignore for what is left out).
+  "name": "supermarket-manager",
+  "compatibility_date": "2026-10-27",
+  "assets": {
+    "directory": "./"
+  }
+}
